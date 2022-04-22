@@ -4,6 +4,12 @@ pragma solidity ^0.8.12;
 import "./interface/CLV2V3Interface.sol";
 
 contract Game {
+    enum GameStatus {
+        INACTIVE,
+        ACTIVE,
+        ENDED
+    }
+
     // Oracle price feed address
     CLV2V3Interface public priceFeed;
 
@@ -13,8 +19,8 @@ contract Game {
     // Game reference timestamp
     uint256 public referenceTimestamp = 0;
 
-    // Game ended
-    bool public gameEnded = false;
+    // Game state
+    GameStatus public gameState = GameStatus.INACTIVE;
 
     // Score mapping (address -> integer)
     mapping(address => uint) public scores;
@@ -26,7 +32,7 @@ contract Game {
     address[] public smallerVotes;
 
     modifier isGameActive() {
-        require(!gameEnded, "Game has ended");
+        require(gameState == GameStatus.ACTIVE, "Game has ended");
         _;
     }
 
@@ -35,9 +41,12 @@ contract Game {
     }
 
     function start() public {
+        require(gameState == GameStatus.INACTIVE, "Game must be inactive");
         require(referenceTimestamp != 0, "Game was already activated");
         (, referencePrice, , referenceTimestamp, ) = priceFeed
             .latestRoundData();
+
+        gameState = GameStatus.ACTIVE;
     }
 
     function vote(bool isBigger) public isGameActive {
@@ -66,6 +75,6 @@ contract Game {
             }
         }
 
-        gameEnded = true;
+        gameState = GameStatus.ENDED;
     }
 }
