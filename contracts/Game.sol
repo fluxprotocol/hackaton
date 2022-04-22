@@ -40,7 +40,7 @@ contract Game {
     }
     
     modifier isGameEnded() {
-        require(gameEnded, "Game hasnt ended");
+        require(gameState == GameStatus.ENDED, "Game hasnt ended");
         _;
     }
 
