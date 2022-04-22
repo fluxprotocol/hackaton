@@ -16,6 +16,9 @@ contract Game {
     // Game ended
     bool public gameEnded = false;
 
+    // Outcome
+    bool public outcome;
+
     // Score mapping (address -> integer)
     mapping(address => uint) public scores;
 
@@ -29,13 +32,18 @@ contract Game {
         require(!gameEnded, "Game has ended");
         _;
     }
+    
+    modifier isGameEnded() {
+        require(gameEnded, "Game hasnt ended");
+        _;
+    }
 
     constructor(address _priceFeed) {
         priceFeed = CLV2V3Interface(_priceFeed);
     }
 
     function start() public {
-        require(referenceTimestamp != 0, "Game was already activated");
+        require(referenceTimestamp == 0, "Game was already activated");
         (, referencePrice, , referenceTimestamp, ) = priceFeed
             .latestRoundData();
     }
@@ -67,5 +75,13 @@ contract Game {
         }
 
         gameEnded = true;
+    }
+
+    function getPoints(address _for) public view isGameEnded returns(uint) {
+        if (outcome) {
+            return scores[_for];
+        } else {
+            return scores[_for];
+        }
     }
 }
