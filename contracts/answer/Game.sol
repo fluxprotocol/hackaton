@@ -45,17 +45,53 @@ contract Game {
     }
 
     constructor(address _priceFeed) {
+        priceFeed = CLV2V3Interface(_priceFeed);
     }
 
     function start() public {
+        require(referenceTimestamp == 0, "Game was already activated");
+        require(gameState == GameStatus.INACTIVE, "Game must be inactive");
+
+        (, referencePrice, , referenceTimestamp, ) = priceFeed
+            .latestRoundData();
+
+        gameState = GameStatus.ACTIVE;
     }
 
     function vote(bool isBigger) public isGameActive {
+        if (isBigger) {
+            biggerVotes.push(msg.sender);
+        } else {
+            smallerVotes.push(msg.sender);
+        }
     }
 
     function tally() public isGameActive {
+        (, int newPrice, , uint newTimestamp, ) = priceFeed.latestRoundData();
+
+        require(
+            newTimestamp > referenceTimestamp,
+            "Price timestamp is not valid"
+        );
+
+        if (newPrice > referencePrice) {
+            for (uint i = 0; i < biggerVotes.length; i++) {
+                scores[biggerVotes[i]]++;
+            }
+        } else if (newPrice < referencePrice) {
+            for (uint i = 0; i < smallerVotes.length; i++) {
+                scores[smallerVotes[i]]++;
+            }
+        }
+
+        gameState = GameStatus.ENDED;
     }
 
     function getPoints(address _for) public view isGameEnded returns(uint) {
+        if (outcome) {
+            return scores[_for];
+        } else {
+            return scores[_for];
+        }
     }
 }
