@@ -24,6 +24,9 @@ describe("PriceBet", function () {
     await this.priceFeed.connect(this.signers.oracleAdmin).transmit(10);
     expect(await this.priceFeed.connect(this.signers.oracleAdmin).latestAnswer()).to.equal(10);
 
+    // Alice starts the game
+    await this.game.connect(this.signers.alice).start();
+
     // Alice votes UP
     await this.game.connect(this.signers.alice).vote(true);
 
@@ -35,8 +38,10 @@ describe("PriceBet", function () {
     await this.priceFeed.connect(this.signers.oracleAdmin).transmit(11);
     expect(await this.priceFeed.connect(this.signers.oracleAdmin).latestAnswer()).to.equal(11);
 
+    // Game can be ended so bob calls for tally
     await this.game.connect(this.signers.bob).tally();
 
+    // Assert that points are appointed correctly
     expect(await this.game.connect(this.signers.bob).getPoints(this.signers.alice.address)).to.equal(1);
     expect(await this.game.connect(this.signers.bob).getPoints(this.signers.bob.address)).to.equal(0);
 
